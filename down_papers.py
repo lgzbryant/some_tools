@@ -1,4 +1,4 @@
-#author: lgz
+#author: LGZ
 
 #DATE: 2019/12/5
 
@@ -13,7 +13,7 @@ import time
 import datetime
 
 config_save_path = 'G:/000_yan_san/paper'
-config_keyword = ' deep learning image survey'
+config_keyword = 'adversarial gan'
 config_number_of_papers = 200   # 25，50，100，200 only can be choose
 
 
@@ -44,7 +44,7 @@ def get_papers_infor(soup):
 
     for p in soup.find_all('p', "title is-5 mathjax"):
         p = strip_tags(p, 'span')
-        papers.append(str(p.text).replace('\n', '').replace('\r', '').replace('?', '_').replace('!', '_').replace(':', '_').replace(',', '').lstrip().rstrip().replace('\"', '_').replace('\"', '_').replace(' ', '_'))
+        papers.append(str(p.text).replace('\n', '').replace('\r', '').replace('?', '_').replace('!', '_').replace(':', '_').replace(',', '').lstrip().rstrip().replace('\/', '_').replace('\"', '_').replace('\"', '_').replace(' ', '_'))
 
         # print(p)
         # # p1 = BeautifulSoup(p)
@@ -76,6 +76,7 @@ def get_papers_infor(soup):
                  'November': '11', 'December': '12'}
 
     for p in soup.select('p[class="is-size-7"]'):
+        # print(str(p.text))
         # print(str(p.text).split(';')[0])
         submitted = str(p.text).split(';')[0].split(',')
         year = submitted[1]
@@ -148,6 +149,43 @@ def download_pdfs(keywords, number_of_papers, save_path):
         print()
 
 
+def download_pdfs_info_to_txt(keywords, number_of_papers, save_path):
+
+    # arxiv = 'https://arxiv.org/search/?searchtype=all&query='
+
+    arxiv = 'https://arxiv.xilesou.top/search/?searchtype=all&query='
+    keywords_list = keywords.replace(' ', '+')
+    arxiv += keywords_list + '&abstracts=show&size=' + str(number_of_papers) + '&order=-announced_date_first'
+
+    # arxiv = 'https://arxiv.org/search/?searchtype=all&query=adversarial&abstracts=show&size=5&order=-announced_date_first'
+    print(arxiv)
+    soup = BeautifulSoup(getHtml(arxiv), 'lxml')
+    papers_list = get_papers_infor(soup)
+
+    print('*' * 100)
+    print('begin to save txt about the [{}] papers, total {} !'.format(str(keywords), str(number_of_papers)))
+    print()
+
+    big_dict = {}
+    i=1
+    for each_dict in papers_list:
+        big_dict[str(i)] = each_dict
+        i += 1
+
+    print(big_dict)
+
+    file = open(save_path + '/' + 'test.txt', 'w')
+    print(save_path + '/' + 'test.txt')
+
+    for k, v in big_dict.items():
+
+        file.write(str("%03d" % int(k)) + '  ' + '('+str(v['date'])[:-1].replace('_', '-').lstrip()+') '+str(v['title']).replace('_', ' ') + '\n')
+        file.write(' '*len(str("%03d" % int(k)) + '  ')+str(v['url']) + '\n')
+        file.write('\n')
+
+    file.close()
+
+
 if __name__ == '__main__':
 
     file_name = config_keyword.lstrip().rstrip().replace(' ', '_')
@@ -156,5 +194,8 @@ if __name__ == '__main__':
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    download_pdfs(config_keyword, config_number_of_papers, save_path)
+    #download_pdfs(config_keyword, config_number_of_papers, save_path)
+
+    download_pdfs_info_to_txt(config_keyword, config_number_of_papers, save_path)
+
 
